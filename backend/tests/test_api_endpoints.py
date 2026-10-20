@@ -114,3 +114,21 @@ def test_complaint_lifecycle():
     assert patch_resp.status_code == 200
     assert patch_resp.json()["status"] == "UNDER_REVIEW"
     assert len(patch_resp.json()["events"]) >= 2
+
+
+def _login(username: str) -> TestClient:
+    c = TestClient(app)
+    r = c.post("/api/auth/login", json={"username": username, "password": "Demo123!"})
+    assert r.status_code == 200
+    return c
+
+
+def test_tinyfish_requires_admin():
+    # anonymous
+    assert TestClient(app).get("/api/tinyfish/status").status_code in (401, 403)
+    assert TestClient(app).post("/api/tinyfish/jobs", json={"source_id": 1, "mode": "DEMO"}).status_code in (401, 403)
+    # non-admin roles
+    for u in ("beneficiary_demo", "dealer_demo", "official_demo"):
+        assert _login(u).get("/api/tinyfish/sources").status_code == 403
+    # admin
+    assert _login("admin_demo").get("/api/tinyfish/status").status_code == 200

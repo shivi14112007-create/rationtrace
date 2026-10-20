@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from backend.app.core.database import get_db
 from backend.app.core.config import settings
+from backend.app.core.security import require_roles
 from backend.app.models.models import DataSource, ExtractionJob, SourceRecord
 from backend.app.schemas.schemas import (
     DataSourceResponse,
@@ -24,7 +25,7 @@ from backend.app.integrations.tinyfish_client import (
     NFSA_PUBLIC_ALLOCATION_URL,
 )
 
-router = APIRouter(prefix="/tinyfish", tags=["TinyFish Intelligence Center"])
+router = APIRouter(prefix="/tinyfish", tags=["TinyFish Intelligence Center"], dependencies=[Depends(require_roles(["ADMIN"]))])
 
 
 @router.get("/status", response_model=TinyFishStatusResponse)
